@@ -1,0 +1,26 @@
+<html>
+<body>
+
+<h1>Numbers</h1>
+<textarea id='numbers' style='height:600px'></textarea>
+<h1>Message</h1>
+<textarea id='message' style='height:20px;width:100%'></textarea>
+
+<button>Send</button>
+
+<div id='status'>
+</div>
+
+</body>
+  <script src="jquery-1.9.1.min.js"></script>
+  <script src="coffee-script.js"></script>
+  <script type='text/coffeescript'>
+    url = "http://lakota.vdomck.org:9090"
+    $("button").click ->
+      for number in $("#numbers").val().split(/\n/)
+        $("#status").append "." + number
+        $.ajax
+          url: "#{url}/sendsms?text=#{encodeURIComponent($("#message").val())}&phone=#{number}"
+          datatype: "jsonp"
+  </script>
+</html>
