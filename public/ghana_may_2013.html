@@ -1,0 +1,49 @@
+<html>
+  <body>
+    <h1>Pomegranate</h1>
+    We recommend using the <a href='https://www.google.com/intl/en/chrome/browser/'>Chrome browser.</a><br/>
+    If your phone is configured correctly and connected then you should see the text: 'Welcome to SMS Gateway' in the grey box below. If not make sure that SMS Gateway and SSH Autotunnel are running on your phone and that an internet connection from the phone is functional. It's usually best to leave SSH Autotunnel running in the foreground so you can monitor the connection.<br/>
+<iframe id='gatewayStatus' style='height:50px;border:none;background-color:grey' src="http://sms.ictedge.org:9090">
+</iframe>
+
+<div>
+<h2>Numbers to send message to</h2>
+<textarea id='numbers' style='height:300px'></textarea>
+<h2>Message to send</h2>
+<textarea id='message' style='height:20px;width:100%'></textarea>
+
+<button>Send</button>
+</div>
+
+<h2>Log</h2>
+<iframe id='log' style='height:200px;border:none;background-color:grey' src="http://sms.ictedge.org/log">
+</iframe>
+<br/>
+<a href='http://sms.ictedge.org/log'>Send log</a><br/>
+
+</body>
+  <script src="jquery-1.9.1.min.js"></script>
+  <script src="coffee-script.js"></script>
+  <script type='text/coffeescript'>
+    url = "http://sms.ictedge.org"
+    port = "9090"
+    $("body").append "
+
+    "
+    $("button").click ->
+      for number in $("#numbers").val().split(/\n/)
+        # Send to SMS Gateway
+        $.ajax
+          url: "#{url}:#{port}/sendsms?text=#{encodeURIComponent($("#message").val())}&phone=#{number}"
+          datatype: "jsonp"
+        # Log it on the server
+        $.ajax
+        url: "#{url}/log_sent_message?text=#{encodeURIComponent($("#message").val())}&phone=#{number}"
+
+    update = ->
+      document.getElementById('gatewayStatus').src = document.getElementById('gatewayStatus').src
+      document.getElementById('log').src = document.getElementById('log').src
+      setTimeout(update, 2000)
+    update()
+  </script>
+</html>
