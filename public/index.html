@@ -1,4 +1,54 @@
 <html>
+  <head>
+    <style>
+      body{
+        background-image:url('pomegranate.jpg');
+        background-repeat: no-repeat;
+        background-color: black;
+        color: #FDEEF4;
+        font-family: "Lucida Console", Monaco, monospace;
+      }
+      textarea, input{
+        background-color: #330014;
+        border: none;
+        color: white;
+        font-size: 2em;
+      }
+      button{
+        background-color: #FFCC99;
+        font-size: 2em;
+        border: 1px solid orange;
+      }
+      button:hover{
+        background-color: orange;
+      }
+      a:visited, a:active{
+        color: #FDEEF4;
+        text-decoration: none;
+      }
+      a:hover {
+        color: purple;
+        background-color: white;
+      }
+      #numbers{
+        height: 300px;
+      }
+      #text{
+        height: 200px;
+      }
+#photo-credit{
+        font-size:.75em;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+      }
+      #chars_left, #number_phone_numbers{
+        font-size: 50%;
+      }
+
+
+    </style>
+  </head>
   <body>
     <h1>Pomegranate <a id='reference_url' href=''></a></h1>
     We recommend using the <a href='https://www.google.com/intl/en/chrome/browser/'>Chrome browser.</a><br/>
@@ -34,16 +84,16 @@
     SMS Gateway Status: <span id='gatewayStatus'></span>
 
     <div>
-      <h2>Numbers to send text/SMS to</h2>
+      <h2>Numbers to send text/SMS to <span id='number_phone_numbers'></span></h2>
       <textarea id='numbers' style='height:300px'></textarea>
-      <h2>Message to send</h2>
-      <textarea id='text' style='height:20px;width:100%'></textarea>
+      <h2>Message to send <span id='chars_left'></span></h2>
+      <textarea id='text' style=''></textarea>
+      <br/>
       <button>Send</button>
     </div>
     <div id='log'>
     </div>
-
-
+    <div id='photo-credit'>Photo thanks to <a href='http://www.flickr.com/photos/9422878@N08/8206371281/'>Bill Gracey</a></div>
   </body>
   <script src="jquery-1.9.1.min.js"></script>
   <script src="coffee-script.js"></script>
@@ -133,5 +183,11 @@
       else
         setTimeout(update, 1000)
     update()
+
+    $("#numbers").keyup ->
+      $("#number_phone_numbers").text "(#{$(this).val().split(/\n/).length} numbers entered)"
+
+    $("#text").keyup ->
+      $("#chars_left").text "(Characters left: #{160 - $(this).val().length})"
   </script>
 </html>
