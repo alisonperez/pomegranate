@@ -1,6 +1,6 @@
 <html>
   <body>
-    <h1>Pomegranate</h1>
+    <h1>Pomegranate <a id='reference_url' href=''></a></h1>
     We recommend using the <a href='https://www.google.com/intl/en/chrome/browser/'>Chrome browser.</a><br/>
     <button>Show/Hide instructions</button>
     <div style='display:none' id='setup_instructions'>
@@ -14,10 +14,11 @@
       <h3>Setup your phone</h3>
       <ol>
         <li> Find a new port by clicking here: <button>Find available port</button>
+        <li> Click the update button to save your settings on the server so that you don't have to do this again. Now you can just click on the URL at the top of this page. Bookmark it, or email it to yourself so you have it for next time.
         <li> Install <a href='https://play.google.com/store/apps/details?id=cz.sde.tunnel&hl=en'>SSH Autotunnel</a>
         <li> Setup ssh autotunnel. Ask Mike for password and details.
         <li> Install <a href='https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway'>SMS Gateway</a>
-        Setup SMS Gateway: Click settings. Check "Listen for HTTP send SMS commands", "Forward incoming SMS to HTTP" and "Enable loggin on SDCARD". Click the HTTP Settings. In the "Listen for HTTP commands on port" , enter the port number that you found above and is now in the form below. In "Forward incoming SMS to HTTP URL", enter "http://sms.ictedge.org/[port number]", for example "http://sms.ictedge.org/2932". Click back until you are on the Status screen. Click Start.
+        Setup SMS Gateway: Click settings. Check "Listen for HTTP send SMS commands", "Forward incoming SMS to HTTP" and "Enable loggin on SDCARD". Click the HTTP Settings. In the "Listen for HTTP commands on port" , enter the port number that you found above and is now in the form below. In "Forward incoming SMS to HTTP URL", enter "http://sms.ictedge.org/<span id='instructions_port'>[port number]</span>". Click back until you are on the Status screen. Click Start.
         </ol>
       </div>
 
@@ -56,8 +57,14 @@
       #{_.humanize config_param}: <input id='config_#{config_param}'></input><br/>
       "
 
-    if port = document.location.search.match(/port=(\d+)/)?.pop()
+    updatePortReferences = (port) ->
+      $("#instructions_port").html(port)
       $("#config_port").val(port)
+      $("#reference_url").attr "href", "#{url}?port=#{port}"
+      $("#reference_url").html "#{url}?port=#{port}"
+
+    if port = document.location.search.match(/port=(\d+)/)?.pop()
+      updatePortReferences(port)
       $.ajax
         url: "/configuration/#{port}"
         datatype: 'json'
@@ -72,8 +79,7 @@
       $.ajax
         url: "/new/port"
         success: (result) ->
-          console.log result
-          $("#config_port").val(result)
+          updatePortReferences(result)
 
     $("button:contains(Get form configuration)").click ->
       $.ajax

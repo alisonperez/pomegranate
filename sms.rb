@@ -8,16 +8,17 @@ require 'json'
 $database = Moneta.new(:File, :dir => 'database')
 
 
-tunnel_server = 'http://localhost'
+$tunnel_server = 'http://localhost'
 
 set :enviroment, :development
 
 def post_to_google(configuration,params)
   options = {}
-  options[configuration[:google_spreadsheet_phone_parameter]] = params[:phone]
-  options[configuration[:google_spreadsheet_text_parameter]] = params[:text]
-  options[configuration[:google_spreadsheet_sent_or_received_parameter]] = params[:sent_or_received]
-  RestClient.post configuration[:google_spreadsheet_url], options
+  options[configuration["google_spreadsheet_phone_parameter"]] = params[:phone]
+  options[configuration["google_spreadsheet_text_parameter"]] = params[:text]
+  options[configuration["google_spreadsheet_sent_or_received_parameter"]] = params[:sent_or_received]
+  puts configuration.inspect
+  RestClient.post configuration["google_spreadsheet_url"], options
 end
 
 get '/receive/:port' do |port|
@@ -26,9 +27,7 @@ get '/receive/:port' do |port|
 end
 
 def send_to_phone(port,params)
-  RestClient.get "#{tunnel_server}:#{port}/sendsms",
-    :phone => params[:phone], 
-    :text => params[:text]
+  RestClient.get "#{$tunnel_server}:#{port}/sendsms", {:params => {:phone => params[:phone], :text => params[:text]}}
 end
 
 get '/send/:port' do |port|
@@ -39,7 +38,7 @@ end
 
 get '/gateway_status/:port' do |port|
   begin
-    RestClient.get("#{tunnel_server}:#{port}")
+    RestClient.get("#{$tunnel_server}:#{port}")
   rescue => e
     return e.to_s
     return "unavailable" if e.to_s.match(/Connection refused/)
@@ -76,5 +75,3 @@ post '/update_database' do
   end
   $database[params["port"]] = config_data
 end
-
-# slow rate of sending messages
