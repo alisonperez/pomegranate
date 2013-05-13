@@ -40,6 +40,8 @@
       <textarea id='text' style='height:20px;width:100%'></textarea>
       <button>Send</button>
     </div>
+    <div id='log'>
+    </div>
 
 
   </body>
@@ -103,17 +105,20 @@
     messageQueue = []
 
     $("button:contains(Send)").click ->
-      for number in $("#numbers").val().split(/\n/)
+      numbers = $("#numbers").val().split(/\n/)
+      $("#log").append "Adding #{numbers.length} message(s) to the outgoing message queue<br/>"
+      for number in numbers
         messageQueue.push
           port: $("#config_port").val()
           text: encodeURIComponent $("#text").val()
           phone: number
 
     processMessageQueue = ->
-      if messageQueue.length > 0
+      if messageQueue.length > 0 and $("#gatewayStatus").html() is "available"
         message = messageQueue.shift()
         $.ajax
           url: "/send/#{message.port}?text=#{message.text}&phone=#{message.phone}"
+          $("#log").append "#{message.phone} -> #{message.text}<br/>"
       setTimeout(processMessageQueue, parseInt($('#sending_rate').val())*1000)
     processMessageQueue()
 
