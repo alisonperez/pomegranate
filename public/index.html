@@ -135,8 +135,11 @@
 
     $("button:contains(Get form configuration)").click ->
       $.ajax
-        url: "/extract_configuration/#{encodeURIComponent $("#google_form_url").val()}"
+        url: "/extract_configuration"
+        type: "post"
         dataType: "json"
+        data:
+          url: $("#google_form_url").val()
         success: (result) ->
           $("#config_google_spreadsheet_phone_parameter").val result[0]
           $("#config_google_spreadsheet_text_parameter").val result[1]

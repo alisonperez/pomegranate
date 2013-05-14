@@ -59,8 +59,8 @@ get '/new/port' do
   new_port()
 end
 
-get '/extract_configuration/:url' do |url|
-  RestClient.get(url).scan(/(entry\.\d+)/).flatten.to_json
+post '/extract_configuration' do
+  RestClient.get(params["url"]).scan(/(entry\.\d+)/).flatten.to_json
 end
 
 get '/configuration/:port' do |port|
