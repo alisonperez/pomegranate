@@ -68,7 +68,7 @@
         <li> Install <a href='https://play.google.com/store/apps/details?id=cz.sde.tunnel&hl=en'>SSH Autotunnel</a>
         <li> Setup ssh autotunnel. Ask Mike for password and details.
         <li> Install <a href='https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway'>SMS Gateway</a>
-        Setup SMS Gateway: Click settings. Check "Listen for HTTP send SMS commands", "Forward incoming SMS to HTTP" and "Enable loggin on SDCARD". Click the HTTP Settings. In the "Listen for HTTP commands on port" , enter the port number that you found above and is now in the form below. In "Forward incoming SMS to HTTP URL", enter "http://sms.ictedge.org/<span id='instructions_port'>[port number]</span>". Click back until you are on the Status screen. Click Start.
+        Setup SMS Gateway: Click settings. Check "Listen for HTTP send SMS commands", "Forward incoming SMS to HTTP" and "Enable loggin on SDCARD". Click the HTTP Settings. In the "Listen for HTTP commands on port" , enter the port number that you found above and is now in the form below. In "Forward incoming SMS to HTTP URL", enter "http://sms.ictedge.org/receive/<span id='instructions_port'>[port number]</span>". Click back until you are on the Status screen. Click Start.
         </ol>
       </div>
 
@@ -177,7 +177,7 @@
 
     update = ->
       port = $("#config_port").val()
-      if port?
+      if port? and port isnt ""
         $.ajax
           url: "/gateway_status/#{$("#config_port").val()}"
           success: (result) ->

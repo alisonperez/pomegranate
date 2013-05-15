@@ -73,5 +73,7 @@ post '/update_database' do
   "name, google_spreadsheet_url, google_spreadsheet_phone_parameter, google_spreadsheet_text_parameter, google_spreadsheet_sent_or_received_parameter".split(/, */).each do |param|
     config_data[param] = params[param]
   end
+  puts "sms.rb #{params["port"]} #{config_data.to_json}"
   $database[params["port"]] = config_data
+  "success"
 end
