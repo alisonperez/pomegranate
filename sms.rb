@@ -3,6 +3,7 @@ require 'sinatra'
 require 'rest-client'
 require 'moneta'
 require 'json'
+require 'pony'
 
 # Create a simple file store
 $database = Moneta.new(:File, :dir => 'database')
@@ -34,6 +35,18 @@ get '/send/:port' do |port|
   params[:sent_or_received] = "sent"
   post_to_google($database[port], params)
   send_to_phone(port, params)
+end
+
+get '/send_via_ssh/:port' do |port|
+  params[:sent_or_received] = "sent"
+  post_to_google($database[port], params)
+  send_to_phone(port, params)
+end
+
+get '/send_via_email/:port' do |port|
+  params[:sent_or_received] = "sent"
+  post_to_google($database[port], params)
+  Pony.mail(:to => 'pomegranate.ictedge@gmail.com', :from => 'pomegranate@sms.ictedge.org', :subject => params[:phone], :body => params[:text], :via => :smtp)
 end
 
 get '/gateway_status/:port' do |port|
@@ -69,11 +82,6 @@ get '/configuration/:port' do |port|
 end
 
 post '/update_database' do
-  config_data = {}
-  "name, google_spreadsheet_url, google_spreadsheet_phone_parameter, google_spreadsheet_text_parameter, google_spreadsheet_sent_or_received_parameter".split(/, */).each do |param|
-    config_data[param] = params[param]
-  end
-  puts "sms.rb #{params["port"]} #{config_data.to_json}"
-  $database[params["port"]] = config_data
+  $database[params["port"]] = JSON.parse(params.to_json) #weird hack
   "success"
 end

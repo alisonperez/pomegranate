@@ -1,0 +1,221 @@
+<html>
+  <head>
+    <style>
+      body{
+        background-image:url('pomegranate.jpg');
+        background-repeat: no-repeat;
+        background-color: black;
+        color: #FDEEF4;
+        font-family: "Lucida Console", Monaco, monospace;
+      }
+      textarea, input{
+        background-color: #330014;
+        border: none;
+        color: white;
+        font-size: 2em;
+      }
+      button{
+        background-color: #FFCC99;
+        font-size: 2em;
+        border: 1px solid orange;
+      }
+      button:hover{
+        background-color: orange;
+      }
+      a:visited, a:active{
+        color: #FDEEF4;
+        text-decoration: none;
+      }
+      a:hover {
+        color: purple;
+        background-color: white;
+      }
+      #numbers{
+        height: 300px;
+      }
+      #text{
+        height: 200px;
+      }
+#photo-credit{
+        font-size:.75em;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+      }
+      #chars_left, #number_phone_numbers{
+        font-size: 50%;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <small>We recommend using the <a href='https://www.google.com/intl/en/chrome/browser/'>Chrome browser.</a><br/></small>
+    <h1>Pomegranate <a id='reference_url' href=''></a></h1>
+    Pomegranate is a tool for sending and receiving SMS messages via the internet but using a local phone number. This is accomplished by using an android phone that is configured to communicate with the Pomegranate server. All of the messages that are sent and received appear on a google spreadsheet.<br/>
+    <br/>
+    <button>Show/Hide instructions</button>
+    <div style='display:none' id='setup_instructions'>
+      <h2>Getting Started:</h2>
+      <h3>Setup your google form</h3>
+      <ol>
+        <li>Make your own copy of the <a href='https://docs.google.com/forms/d/12qRAtzhSkRNv6SzSgPPzTmGQm39yzUK5TP-AKcfWvNo/edit?usp=sharing'> Sample SMS Data Form</a>. (Click on 'file', 'make a copy').
+        <li> Click View live form, once the page opens copy the URL
+        <li> Paste the URL here, <input id='google_form_url'></input> and click: <button>Get form configuration</button>
+      </ol>
+      <h3>Setup your phone</h3>
+      <ol>
+        <li> Find a new port by clicking here: <button>Find available port</button>
+        <li> Click the update button to save your settings on the server so that you don't have to do this again. Now you can just click on the URL at the top of this page. Bookmark it, or email it to yourself so you have it for next time.
+        <li> Install <a href='https://play.google.com/store/apps/details?id=cz.sde.tunnel&hl=en'>SSH Autotunnel</a>
+        <li> Setup ssh autotunnel. Ask Mike for password and details.
+        <li> Install <a href='https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway'>SMS Gateway</a>
+        Setup SMS Gateway: Click settings. Check "Listen for HTTP send SMS commands", "Forward incoming SMS to HTTP" and "Enable loggin on SDCARD". Click the HTTP Settings. In the "Listen for HTTP commands on port" , enter the port number that you found above and is now in the form below. In "Forward incoming SMS to HTTP URL", enter "http://sms.ictedge.org/receive/<span id='instructions_port'>[port number]</span>". Click back until you are on the Status screen. Click Start.
+        </ol>
+      </div>
+
+    <div id='configuration'>
+    </div>
+    <button>Update</button>
+    <br/>
+    Sending rate. Number of seconds to wait between sending messages. Some phones will stop sending messages if 500 messages in 30 minutes is exceeded (about one every 4 seconds).
+    <input id='sending_rate' value='5'></input>
+    <div>
+    </div>
+ 
+    SMS Gateway Status: <span id='gatewayStatus'></span>
+
+    <div>
+      <h2>Numbers to send text/SMS to <span id='number_phone_numbers'></span></h2>
+      <textarea id='numbers' style='height:300px'></textarea>
+      <h2>Message to send <span id='chars_left'></span></h2>
+      <textarea id='text' style=''></textarea>
+      <br/>
+      <button>Send</button>
+    </div>
+    <h3> Message Queue (Messages waiting to be sent)</h3>
+    <div id='messageQueue'>
+    </div>
+    <h3>Log</h3>
+    <div id='log'>
+    </div>
+    <div id='photo-credit'>Photo thanks to <a href='http://www.flickr.com/photos/9422878@N08/8206371281/'>Bill Gracey</a></div>
+  </body>
+  <script src="jquery-1.9.1.min.js"></script>
+  <script src="coffee-script.js"></script>
+  <script src="underscore-min.js"></script>
+  <script src="underscore.string.js" type="text/javascript"></script>
+  <script type="text/javascript"> _.mixin(_.str.exports()) </script>
+  <script type='text/coffeescript'>
+    url = "http://sms.ictedge.org"
+
+    config_params = "name, port, google_spreadsheet_url, google_spreadsheet_phone_parameter, google_spreadsheet_text_parameter, google_spreadsheet_sent_or_received_parameter, send_method".split(/, */)
+    for config_param in config_params
+      $("#configuration").append "
+      #{_.humanize config_param}: <input id='config_#{config_param}'></input><br/>
+      "
+
+    updatePortReferences = (port) ->
+      $("#instructions_port").html(port)
+      $("#config_port").val(port)
+      $("#reference_url").attr "href", "#{url}?port=#{port}"
+      $("#reference_url").html "#{url}?port=#{port}"
+
+    if port = document.location.search.match(/port=(\d+)/)?.pop()
+      updatePortReferences(port)
+      $.ajax
+        url: "/configuration/#{port}"
+        datatype: 'json'
+        success: (result) =>
+          for configuration_param, value of result
+            $("#config_#{configuration_param}").val(value)
+
+    $("button:contains(Show/Hide instructions)").click ->
+      $("#setup_instructions").toggle()
+
+    $("button:contains(Find available port)").click ->
+      $.ajax
+        url: "/new/port"
+        success: (result) ->
+          updatePortReferences(result)
+
+    $("button:contains(Get form configuration)").click ->
+      $.ajax
+        url: "/extract_configuration"
+        type: "post"
+        dataType: "json"
+        data:
+          url: $("#google_form_url").val()
+        success: (result) ->
+          $("#config_google_spreadsheet_phone_parameter").val result[0]
+          $("#config_google_spreadsheet_text_parameter").val result[1]
+          $("#config_google_spreadsheet_sent_or_received_parameter").val result[2]
+          $("#config_google_spreadsheet_url").val $("#google_form_url").val().replace(/viewform/, "formResponse")
+
+    $("button:contains(Update)").click ->
+      data = {}
+      for config_param in config_params
+        data[config_param] = $("#config_#{config_param}").val()
+      $.ajax
+        url: "/update_database"
+        type: "post"
+        data: data
+
+    messageQueue = []
+
+    updateMessageQueueStatus = ->
+      $("#messageQueue").html ""
+      for message in messageQueue
+        $("#messageQueue").append "
+          #{message.phone}: #{decodeURIComponent(message.text)}<br/>
+        "
+
+    $("button:contains(Send)").click ->
+      numbers = $("#numbers").val().split(/\n/)
+      $("#log").append "Adding #{numbers.length} message(s) to the outgoing message queue<br/>"
+      for number in numbers
+        messageQueue.push
+          port: $("#config_port").val()
+          text: encodeURIComponent $("#text").val()
+          phone: number
+      updateMessageQueueStatus()
+      $("#numbers").val("")
+
+    processMessageQueue = ->
+      send_method = $('#config_send_method').val()
+      if messageQueue.length > 0 and (send_method is "email" or (send_method is "ssh" and $("#gatewayStatus").html() is "available"))
+        message = messageQueue.shift()
+        $.ajax
+          url: "/send_via_#{send_method}/#{message.port}?text=#{message.text}&phone=#{message.phone}"
+          $("#log").append "#{message.phone} -> #{message.text}<br/>"
+        updateMessageQueueStatus()
+      else
+        if send_method is ""
+          alert "send method not defined"
+        if $("#gatewayStatus").html() isnt "available"
+          alert "gateway isnt available"
+      setTimeout(processMessageQueue, parseInt($('#sending_rate').val())*1000)
+    processMessageQueue()
+
+    update = ->
+      port = $("#config_port").val()
+      if port? and port isnt "" and $('#config_send_method').val() is "ssh"
+        $.ajax
+          url: "/gateway_status/#{$("#config_port").val()}"
+          success: (result) ->
+            $("#gatewayStatus").html result
+        setTimeout(update, 10000)
+      else
+        setTimeout(update, 1000)
+    update()
+
+    $("#numbers").keyup ->
+      number_of_numbers = $(this).val().split(/\n/).length
+      sending_rate = parseInt($('#sending_rate').val())
+      time_required = Math.round(number_of_numbers * sending_rate / 60)
+      $("#number_phone_numbers").text "(#{$(this).val().split(/\n/).length} numbers entered - total time required: #{time_required} minute(s) )"
+
+    $("#text").keyup ->
+      $("#chars_left").text "(Characters left: #{160 - $(this).val().length})"
+  </script>
+</html>
